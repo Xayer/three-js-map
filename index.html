@@ -1,0 +1,141 @@
+<html>
+	<head>
+		<title>My first three.js app</title>
+		<style>
+			body { margin: 0; height: 100vh;}
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<script type="module">
+			var renderer = new THREE.WebGLRenderer({antialias: true});
+			var scene = new THREE.Scene();
+			var width = window.innerWidth;
+			var height = window.innerHeight;
+			var PerspectiveCamera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
+			var OrthographicCamera = new THREE.OrthographicCamera(width / - 50, width / 50, height / 50, height / -50, 50, 1000 );
+			var camera = PerspectiveCamera;
+			var map;
+			var gridHelper;
+			var sphere;
+			var mapsize = {
+					width: 500,
+					height: 500
+				}
+			var mapImagePath = 'img/map.png';
+			var navigationAmount = 0.5;
+			var maxZoomLevel = 5;
+			
+			function initialize(){
+				window.addEventListener( 'resize', onWindowResize, false );
+				window.addEventListener( 'wheel', onScroll, false );
+				window.addEventListener( 'keypress', navigateUsingKeys, false );
+				camera.position.z = 20;
+				renderer.setSize( width, height );
+				renderer.setClearColor(0xffffff);
+				document.body.appendChild( renderer.domElement );
+				addMap();
+				addGrid();
+				addLight();
+				//addSphere();
+
+				//should always be last
+				animate();
+			}
+
+			function addSphere(){
+				var geometry = new THREE.SphereGeometry(20, 5, 7);
+				var material = new THREE.MeshLambertMaterial({color: 0xefefef});
+				sphere = new THREE.Mesh(geometry, material);
+				scene.add(sphere);
+			}
+
+			function addMap(){
+				var resolution = 0.05;
+				var mapGeometry = new THREE.PlaneGeometry( mapsize.width * resolution , mapsize.height * resolution );
+				var mapTexture = new THREE.TextureLoader().load(mapImagePath);
+				mapTexture.minFilter = THREE.NearestFilter;
+				mapTexture.magFilter = THREE.LinearMipMapLinearFilter;
+
+				var mapMaterial = new THREE.MeshBasicMaterial( {map: mapTexture, side: THREE.DoubleSide} );
+				map = new THREE.Mesh( mapGeometry, mapMaterial );
+				scene.add( map );
+			}
+
+			function addGrid(){
+				var gridHelper = new THREE.GridHelper(width, height);
+				scene.add(gridHelper);
+				gridHelper.rotation.x = 1.57;
+				gridHelper.position.z = 1;
+			}
+
+			function addLight(){
+				var light = new THREE.PointLight(0x0333de, 1, 100);
+				light.position.set(10, 0, 65 );
+				scene.add(light);
+				/* var hemisphereLight = new THREE.HemisphereLight( 0xffffff, 0x000000, 1);
+				scene.add(hemisphereLight); */
+			}
+
+			function onWindowResize(){
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
+			function onScroll(event){
+				/* zoomPosition += 0.2; */
+				/* camera.position.z += 0.2; */
+				if(event.deltaY > 0){
+					camera.position.z += navigationAmount;
+				} else {wwww
+					if(camera.position.z === maxZoomLevel) {
+						return;
+					}
+					camera.position.z -= navigationAmount;
+				}
+			}
+
+			function navigateUsingKeys(event){
+				var keyMapper = {
+					w: 'up',
+					a: 'left',
+					s: 'down',
+					d: 'right'
+				}
+				if(keyMapper.hasOwnProperty(event.key)){
+					navigateMap(keyMapper[event.key]);
+				}
+			}
+
+			function navigateMap(direction){
+				if(direction == 'up'){
+					camera.position.y += navigationAmount;
+				}
+
+				if(direction == 'down'){
+					camera.position.y -= navigationAmount;
+				}
+
+				if(direction == 'left'){
+					camera.position.x -= navigationAmount;
+				}
+				if(direction == 'right'){
+					camera.position.x += navigationAmount;
+				}
+			}
+
+			function animate(){
+				requestAnimationFrame(animate);
+				render();
+			}
+
+			function render(){
+				renderer.render( scene, camera );
+			}
+
+			initialize();
+		</script>
+	</body>
+</html>
